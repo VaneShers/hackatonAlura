@@ -25,10 +25,8 @@ public class JpaUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String emailLower = username.toLowerCase().trim();
-        User user = userRepository.findAll().stream()
-                .filter(u -> emailLower.equals(u.getEmail()))
-                .findFirst()
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByEmail(emailLower)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Collection<GrantedAuthority> authorities = Arrays.stream(user.getRoles().split(","))
                 .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)

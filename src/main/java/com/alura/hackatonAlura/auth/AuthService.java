@@ -13,10 +13,13 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.alura.hackatonAlura.security.JwtUtil jwtUtil;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                       com.alura.hackatonAlura.security.JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @Transactional
@@ -36,5 +39,21 @@ public class AuthService {
 
         User saved = userRepository.save(user);
         return new UserResponse(saved.getId(), saved.getEmail(), saved.getFullName(), saved.getRoles());
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResponse login(LoginRequest request) {
+        String emailLower = request.email().toLowerCase(java.util.Locale.ROOT).trim();
+        User user = userRepository.findByEmail(emailLower)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail(), java.util.Map.of(
+                "roles", user.getRoles()
+        ));
+        return new LoginResponse(token, "Bearer");
     }
 }
