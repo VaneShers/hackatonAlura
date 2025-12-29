@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  ds:
+    build: ./ds-service
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket,sys;s=socket.socket();s.settimeout(1);s.connect(('127.0.0.1',8000));s.close();sys.exit(0)\""]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - CHURN_DS_URL=http://ds:8000/predict
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c \"ps -ef | grep /app/app.jar | grep -v grep >/dev/null\""]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      ds:
+        condition: service_healthy
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - CHURN_API_URL=http://api:8080
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket,sys;s=socket.socket();s.settimeout(1);s.connect(('127.0.0.1',8501));s.close();sys.exit(0)\""]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      api:
+        condition: service_healthy

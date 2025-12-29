@@ -96,6 +96,12 @@
 				<version>0.11.5</version>
 				<scope>runtime</scope>
 			</dependency>
+			<!-- CSV parser for batch endpoint -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-csv</artifactId>
+				<version>1.12.0</version>
+			</dependency>
 	</dependencies>
 
 	<build>
