@@ -1,7 +1,7 @@
 # Churn Alert
 
 ## Objetivo
-API REST que recibe datos de cliente y devuelve predicción de churn y probabilidad. Integra con un microservicio de Data Science (DS) o usa un heurístico de respaldo.
+API REST que recibe datos de cliente y devuelve predicción de churn y probabilidad. Integra con un microservicio de Data Science (DS).
 
 ## Endpoints
 - POST `/api/churn/predict` (JSON)
