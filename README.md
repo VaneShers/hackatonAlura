@@ -82,6 +82,14 @@ Nota: la validación ya está implementada en la API (ver pruebas en `target/sur
   - Persistencia: H2 (memoria) por defecto.
 
 ## Ejecución
+### Inicio rápido (un comando)
+```powershell
+cd "c:\Users\hugow\Hackaton Alura\hackatonAlura"
+./run.ps1 -Build
+```
+- Levanta los servicios con Docker Compose, espera a que estén saludables, obtiene un JWT de admin y abre el dashboard.
+- Usa `-Build` para forzar reconstrucción de imágenes.
+
 ```powershell
 # En Windows
 cd "c:\Users\hugow\Hackaton Alura\hackatonAlura"

@@ -17,13 +17,27 @@ def get_api_base_url():
 
 
 def get_auth_token():
-    return st.sidebar.text_input("Bearer token (opcional)", type="password")
+    return st.sidebar.text_input(
+        "Bearer token (opcional)",
+        type="password",
+        help="Pega solo el valor del token o con el prefijo 'Bearer '. Ambos funcionan.",
+    )
+
+
+def _normalize_token(token: str | None) -> str | None:
+    if not token:
+        return None
+    t = token.strip()
+    if t.lower().startswith("bearer "):
+        t = t.split(" ", 1)[1].strip()
+    return t
 
 
 def build_headers(token: str | None):
     headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
+    norm = _normalize_token(token)
+    if norm:
+        headers["Authorization"] = f"Bearer {norm}"
     return headers
 
 

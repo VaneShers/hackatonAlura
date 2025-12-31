@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   ds:
     build: ./ds-service
@@ -21,7 +20,7 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: ["CMD-SHELL", "sh -c \"ps -ef | grep /app/app.jar | grep -v grep >/dev/null\""]
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:8080/"]
       interval: 10s
       timeout: 3s
       retries: 3
