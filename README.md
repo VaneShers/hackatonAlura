@@ -5,6 +5,7 @@ API REST que recibe datos de cliente y devuelve predicción de churn y probabili
 
 ## Endpoints
 - POST `/api/churn/predict` (JSON)
+  - Protegido: requiere `Authorization: Bearer <token>`
   - Entrada:
     ```json
     {
@@ -27,10 +28,12 @@ API REST que recibe datos de cliente y devuelve predicción de churn y probabili
   - Devuelve: `{ "total_evaluados": N, "tasa_churn": 0.xx }`
 
 - POST `/api/churn/predict/batch` (JSON array)
+  - Protegido: requiere `Authorization: Bearer <token>`
   - Entrada: lista de objetos como el ejemplo individual.
   - Salida: `{ items: [...], total: N, cancelaciones: M }`
 
 - POST `/api/churn/predict/batch/csv` (multipart/form-data)
+  - Protegido: requiere `Authorization: Bearer <token>`
   - Subir archivo CSV con encabezados: `tiempo_contrato_meses,retrasos_pago,uso_mensual,plan`
   - Salida igual al batch JSON.
   - Ejemplo listo para usar: `samples/churn_batch_sample.csv`
@@ -59,6 +62,7 @@ Nota: la validación ya está implementada en la API (ver pruebas en `target/sur
   ```bash
   curl -X POST "http://localhost:8080/api/churn/predict" \
     -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <token>" \
     -d '{
       "tiempo_contrato_meses": 12,
       "retrasos_pago": 2,
@@ -70,6 +74,7 @@ Nota: la validación ya está implementada en la API (ver pruebas en `target/sur
   ```bash
   curl -X POST "http://localhost:8080/api/churn/predict/batch/csv" \
     -H "Content-Type: multipart/form-data" \
+    -H "Authorization: Bearer <token>" \
     -F "file=@samples/churn_batch_sample.csv"
   ```
 
@@ -80,8 +85,9 @@ Nota: la validación ya está implementada en la API (ver pruebas en `target/sur
 
 ## Ejecución
 ### Inicio rápido (un comando)
+Nota: `<project-root>` es la carpeta donde clonaste el proyecto (contiene `docker-compose.yml`). Ajusta la ruta según tu entorno.
 ```powershell
-cd "c:\Users\hugow\Hackaton Alura\hackatonAlura"
+cd <project-root>
 ./run.ps1 -Build
 ```
 - Levanta los servicios con Docker Compose, espera a que estén saludables, obtiene un JWT de admin y abre el dashboard.
@@ -89,12 +95,12 @@ cd "c:\Users\hugow\Hackaton Alura\hackatonAlura"
 
 ```powershell
 # En Windows
-cd "c:\Users\hugow\Hackaton Alura\hackatonAlura"
+cd <project-root>
 .\mvnw.cmd spring-boot:run
 ```
 
 ### JWT para endpoints protegidos
-El endpoint de estadísticas (`/api/churn/stats`) requiere autenticación. Para consultarlo:
+Los endpoints de predicción y estadísticas requieren autenticación. Por ejemplo, para consultar estadísticas:
 
 ```powershell
 # 1) Login para obtener token (admin inicial)
@@ -134,7 +140,7 @@ Invoke-RestMethod -Method GET -Uri http://localhost:8080/api/churn/stats -Header
 
 ## Docker Compose (API + DS)
 ```powershell
-cd "c:\Users\hugow\Hackaton (entorno local) Alura\hackatonAlura"
+cd <project-root>
 docker compose up --build
 ```
 - La API quedará en `http://localhost:8080`, el DS en `http://localhost:8000`.
@@ -219,7 +225,7 @@ Un panel sencillo para interactuar con la API, realizar predicciones individuale
 
 ### Instalación y ejecución (Windows PowerShell)
 ```powershell
-cd "c:\Users\hugow\Hackaton Alura\hackatonAlura"
+cd <project-root>
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r dashboard/requirements.txt
