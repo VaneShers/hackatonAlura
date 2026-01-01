@@ -1,6 +1,8 @@
 package com.alura.hackatonAlura.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (Exception ignored) {
+            } catch (ExpiredJwtException e) {
+                request.setAttribute("jwt_error", "expired");
+                SecurityContextHolder.clearContext();
+            } catch (JwtException | IllegalArgumentException e) {
+                request.setAttribute("jwt_error", "invalid");
                 SecurityContextHolder.clearContext();
             }
         }

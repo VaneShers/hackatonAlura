@@ -14,8 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.alura.hackatonAlura.security.JwtAuthenticationFilter;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import com.alura.hackatonAlura.security.RestAuthenticationEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -28,7 +27,7 @@ public class SecurityConfig {
     }
 
     @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
+        public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, RestAuthenticationEntryPoint restEntryPoint) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -43,7 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
             )
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(restEntryPoint))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
