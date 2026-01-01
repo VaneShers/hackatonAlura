@@ -74,12 +74,9 @@ Nota: la validación ya está implementada en la API (ver pruebas en `target/sur
   ```
 
 ## Configuración
-- Entorno (`.env`) y propiedades (`src/main/resources/application.properties`):
-  - `CHURN_DS_URL` → URL del servicio DS (ej. `http://localhost:8000/predict`). Si está vacío, la API usa heurístico local.
-  - `JWT_SECRET` → secreto para firmar tokens JWT.
-  - `JWT_EXPIRATION_MINUTES` → minutos de validez del JWT.
-  - `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD` / `ADMIN_INITIAL_FULL_NAME` → usuario admin inicial (solo dev).
-  - Persistencia: H2 (memoria) por defecto.
+- `src/main/resources/application.properties`:
+  - `churn.ds.url` → URL del servicio DS (ej. `http://localhost:8000/predict`).
+  - Persistencia: se guardan predicciones en tabla `predictions` (H2 por defecto).
 
 ## Ejecución
 ### Inicio rápido (un comando)
@@ -137,7 +134,7 @@ Invoke-RestMethod -Method GET -Uri http://localhost:8080/api/churn/stats -Header
 
 ## Docker Compose (API + DS)
 ```powershell
-cd "c:\Users\hugow\Hackaton Alura\hackatonAlura"
+cd "c:\Users\hugow\Hackaton (entorno local) Alura\hackatonAlura"
 docker compose up --build
 ```
 - La API quedará en `http://localhost:8080`, el DS en `http://localhost:8000`.
