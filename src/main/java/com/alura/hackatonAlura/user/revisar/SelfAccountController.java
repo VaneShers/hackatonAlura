@@ -1,4 +1,4 @@
-package com.alura.hackatonAlura.user;
+/* package com.alura.hackatonAlura.user;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Profile", description = "Autogestión del usuario autenticado")
 public class SelfAccountController {
 
-    private final UserService userService;
+    private final User.UserService userService;
 
-    public SelfAccountController(UserService userService) {
+    public SelfAccountController(User.UserService userService) {
         this.userService = userService;
     }
 
@@ -33,6 +33,7 @@ public class SelfAccountController {
         UserResponse res = userService.getProfile(auth.getName());
         return res;
     }
+
 
     @PutMapping("/email")
     @PreAuthorize("isAuthenticated()")
@@ -50,3 +51,5 @@ public class SelfAccountController {
         return ResponseEntity.noContent().build();
     }
 }
+
+ */

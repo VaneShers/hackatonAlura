@@ -1,5 +1,7 @@
-package com.alura.hackatonAlura.user;
+/*
+package com.alura.hackatonAlura.user.revisar;
 
+import com.alura.hackatonAlura.user.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -29,3 +31,4 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
+*/

@@ -1,3 +1,4 @@
+/*
 package com.alura.hackatonAlura.user;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,9 +21,9 @@ import java.util.List;
 @Tag(name = "Admin", description = "Administración de usuarios (requiere rol ADMIN)")
 public class AdminUserController {
 
-    private final UserService userService;
+    private final User.UserService userService;
 
-    public AdminUserController(UserService userService) {
+    public AdminUserController(User.UserService userService) {
         this.userService = userService;
     }
 
@@ -69,3 +70,4 @@ public class AdminUserController {
         return ResponseEntity.noContent().build();
     }
 }
+*/
