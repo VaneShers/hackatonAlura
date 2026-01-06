@@ -55,6 +55,11 @@ API REST que recibe datos de cliente y devuelve predicción de churn y probabili
   - Nota: `TotalCharges` vacío se normaliza a `0.0` (Opción A); alternativamente puede rechazarse la solicitud (Opción B).
   - Ejemplo listo para usar: `samples/churn_batch_sample.csv`
 
+- POST `/api/churn/evaluate/batch/csv` (multipart/form-data)
+  - Protegido: requiere `Authorization: Bearer <token)`
+  - Subir archivo CSV extendido que incluya las 20 columnas canónicas y adicionalmente `Churn` con valores `Yes`/`No`.
+  - Salida: métricas y conteos `{ total, tp, tn, fp, fn, accuracy, precision, recall, f1 }`.
+
 ## Validación de entrada
 - Campos requeridos para `/api/churn/predict` (20 variables):
   - Strings (sensibles a mayúsculas/minúsculas) deben coincidir exactamente con la referencia: 
@@ -109,6 +114,14 @@ API REST que recibe datos de cliente y devuelve predicción de churn y probabili
     -H "Content-Type: multipart/form-data" \
     -H "Authorization: Bearer <token>" \
     -F "file=@samples/churn_batch_sample.csv"
+  ```
+
+- cURL (evaluate CSV):
+  ```bash
+  curl -X POST "http://localhost:8080/api/churn/evaluate/batch/csv" \
+    -H "Content-Type: multipart/form-data" \
+    -H "Authorization: Bearer <token>" \
+    -F "file=@<ruta-al-csv-extendido-con-Churn>.csv"
   ```
 
 ## Configuración
@@ -265,7 +278,13 @@ pip install -r dashboard/requirements.txt
 streamlit run dashboard/app.py
 ```
 
+### Autenticación en el dashboard
+- Los endpoints protegidos (predicción y batch CSV) requieren JWT. Usa el panel lateral del dashboard ("Login rápido") para obtener el token con `admin@local` / `Admin123!`, o pega manualmente el token en el campo "Bearer token".
+- Si intentas subir un CSV sin token, el dashboard mostrará una guía para iniciar sesión antes de continuar.
+- Alternativa: ejecuta `./run.ps1 -Build` para levantar todo con Docker y abrir el dashboard; el script obtiene un JWT automáticamente y puedes copiarlo si lo necesitas.
+
 ### Uso
 - Por defecto apunta a `http://localhost:8080`. Puedes ajustar la URL y (si aplica) ingresar un Bearer token en la barra lateral.
 - Para prueba de lote, usa el CSV de ejemplo en [samples/churn_batch_sample.csv](samples/churn_batch_sample.csv).
+- También se aceptan archivos extendidos que incluyan columnas adicionales como `customerID` y `Churn`; el backend ignora columnas no utilizadas. Asegúrate de incluir las 20 columnas canónicas con nombres exactos.
 - Código del panel: [dashboard/app.py](dashboard/app.py) | Dependencias: [dashboard/requirements.txt](dashboard/requirements.txt)

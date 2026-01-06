@@ -17,10 +17,12 @@ def get_api_base_url():
 
 
 def get_auth_token():
+    preset = st.session_state.get("token") or ""
     return st.sidebar.text_input(
         "Bearer token (opcional)",
+        value=preset,
         type="password",
-        help="Pega solo el valor del token o con el prefijo 'Bearer '. Ambos funcionan.",
+        help="Pega solo el valor del token o usa el Login rápido para obtenerlo.",
     )
 
 
@@ -39,6 +41,34 @@ def build_headers(token: str | None):
     if norm:
         headers["Authorization"] = f"Bearer {norm}"
     return headers
+
+
+def login_quick(api_url: str):
+    with st.sidebar.expander("Login rápido"):
+        email = st.text_input("Email", value="admin@local", key="login_email")
+        password = st.text_input("Password", value="Admin123!", type="password", key="login_password")
+        if st.button("Obtener token", key="login_btn"):
+            try:
+                resp = requests.post(
+                    f"{api_url}/api/auth/login",
+                    headers={"Content-Type": "application/json"},
+                    data=json.dumps({"email": email, "password": password}),
+                    timeout=10,
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    token = data.get("token")
+                    if token:
+                        st.session_state["token"] = token
+                        st.success("Token guardado en la sesión.")
+                    else:
+                        st.error("Respuesta sin token. Verifica credenciales.")
+                elif resp.status_code in (401, 403):
+                    st.error("Credenciales inválidas o no autorizadas.")
+                else:
+                    st.error(f"Error {resp.status_code}: {resp.text}")
+            except requests.RequestException as e:
+                st.error(f"Error de red al hacer login: {e}")
 
 
 def call_predict(api_url: str, payload: dict, token: str | None):
@@ -73,10 +103,25 @@ def call_batch_csv(api_url: str, csv_bytes: bytes, filename: str, token: str | N
         return None
 
 
+def call_evaluate_csv(api_url: str, csv_bytes: bytes, filename: str, token: str | None):
+    try:
+        headers = {}
+        norm = _normalize_token(token)
+        if norm:
+            headers["Authorization"] = f"Bearer {norm}"
+        files = {"file": (filename, io.BytesIO(csv_bytes), "text/csv")}
+        resp = requests.post(f"{api_url}/api/churn/evaluate/batch/csv", headers=headers, files=files, timeout=60)
+        return resp
+    except requests.RequestException as e:
+        st.error(f"Error de red al llamar evaluación CSV: {e}")
+        return None
+
+
 api_url = get_api_base_url()
+login_quick(api_url)
 token = get_auth_token()
 
-tab_individual, tab_batch, tab_stats = st.tabs(["Predicción individual", "Batch CSV", "Estadísticas"])
+tab_individual, tab_batch, tab_evaluate, tab_stats = st.tabs(["Predicción individual", "Batch CSV", "Evaluación CSV", "Estadísticas"])
 
 with tab_individual:
     st.subheader("Predicción individual")
@@ -195,6 +240,10 @@ with tab_batch:
     st.caption(
         "Encabezados requeridos: gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges"
     )
+    # Requiere autenticación para el endpoint protegido
+    if not _normalize_token(token):
+        st.info("Este endpoint requiere autenticación. Usa 'Login rápido' en la barra lateral para obtener un token o pégalo manualmente.")
+        st.stop()
     uploaded = st.file_uploader("Subir CSV", type=["csv"])
 
     if uploaded is not None:
@@ -229,6 +278,54 @@ with tab_batch:
                 st.code(json.dumps(err, ensure_ascii=False, indent=2), language="json")
             except Exception:
                 st.error(f"Solicitud inválida: {resp.text}")
+        else:
+            st.error(f"Error {resp.status_code}: {resp.text}")
+
+with tab_evaluate:
+    st.subheader("Evaluación con etiquetas (CSV)")
+    st.caption(
+        "Sube un CSV extendido con las 20 columnas canónicas y la columna 'Churn' (Yes/No)."
+    )
+    if not _normalize_token(token):
+        st.info("Este endpoint requiere autenticación. Usa 'Login rápido' en la barra lateral para obtener un token o pégalo manualmente.")
+        st.stop()
+    uploaded_eval = st.file_uploader("Subir CSV etiquetado", type=["csv"], key="eval_csv")
+    if uploaded_eval is not None:
+        try:
+            df_preview = pd.read_csv(uploaded_eval)
+            st.dataframe(df_preview.head(20), use_container_width=True)
+        except Exception as e:
+            st.warning(f"No se pudo leer el CSV para vista previa: {e}")
+
+        resp = call_evaluate_csv(api_url, uploaded_eval.getvalue(), uploaded_eval.name, token)
+        if resp is None:
+            st.stop()
+        if resp.status_code == 200:
+            data = resp.json()
+            st.success("Métricas de evaluación")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Accuracy", f"{data.get('accuracy', 0):.3f}")
+                st.metric("Total", data.get("total", 0))
+            with col2:
+                st.metric("Precision", f"{data.get('precision', 0):.3f}")
+                st.metric("TP", data.get("tp", 0))
+            with col3:
+                st.metric("Recall", f"{data.get('recall', 0):.3f}")
+                st.metric("TN", data.get("tn", 0))
+            with col4:
+                st.metric("F1", f"{data.get('f1', 0):.3f}")
+                st.metric("FP/FN", f"{data.get('fp', 0)}/{data.get('fn', 0)}")
+            st.code(json.dumps(data, ensure_ascii=False, indent=2), language="json")
+        elif resp.status_code == 400:
+            try:
+                err = resp.json()
+                st.error("Error de evaluación")
+                st.code(json.dumps(err, ensure_ascii=False, indent=2), language="json")
+            except Exception:
+                st.error(f"Solicitud inválida: {resp.text}")
+        elif resp.status_code == 401:
+            st.error("No autorizado. Verifica el token en la barra lateral.")
         else:
             st.error(f"Error {resp.status_code}: {resp.text}")
 
