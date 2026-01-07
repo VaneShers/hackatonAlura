@@ -24,10 +24,12 @@ public class ChurnServiceFallbackTest {
                 .thenThrow(new RestClientException("DS down"));
 
         ChurnRequest req = new ChurnRequest();
-        req.setTiempoContratoMeses(12);
-        req.setRetrasosPago(2);
-        req.setUsoMensual(14.5);
-        req.setPlan("Premium");
+        req.setTenure(12);
+        req.setMonthlyCharges(14.5);
+        req.setTotalCharges(0.0);
+        req.setSeniorCitizen(0);
+        req.setContract("Month-to-month");
+        req.setOnlineSecurity("No");
 
         ChurnPredictionResponse res = service.predict(req);
 

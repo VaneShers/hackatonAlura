@@ -9,6 +9,25 @@ public class ChurnPredictionResponse {
     private List<String> topFeatures; // opcional
     private Instant timestamp;
 
+    // Nuevo formato enriquecido
+    public static class Metadata {
+        public String model_version;
+        public Instant timestamp;
+    }
+    public static class PredictionInfo {
+        public double churn_probability;
+        public int will_churn; // 0/1
+        public String risk_level; // Bajo/Medio/Alto (o en inglés)
+        public double confidence_score;
+    }
+    public static class BusinessLogic {
+        public String suggested_action;
+    }
+
+    private Metadata metadata;
+    private PredictionInfo prediction;
+    private BusinessLogic business_logic;
+
     public ChurnPredictionResponse() {}
 
     public ChurnPredictionResponse(String prevision, double probabilidad, List<String> topFeatures, Instant timestamp) {
@@ -29,4 +48,11 @@ public class ChurnPredictionResponse {
 
     public Instant getTimestamp() { return timestamp; }
     public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
+
+    public Metadata getMetadata() { return metadata; }
+    public void setMetadata(Metadata metadata) { this.metadata = metadata; }
+    public PredictionInfo getPrediction() { return prediction; }
+    public void setPrediction(PredictionInfo prediction) { this.prediction = prediction; }
+    public BusinessLogic getBusiness_logic() { return business_logic; }
+    public void setBusiness_logic(BusinessLogic business_logic) { this.business_logic = business_logic; }
 }

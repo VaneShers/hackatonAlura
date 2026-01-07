@@ -12,28 +12,30 @@ except Exception:
 app = Flask(__name__)
 
 
-# Heuristic fallback model (mirrors Java fallback)
+# Heuristic fallback model (canonical fields)
 def heuristic_score(features: dict) -> Tuple[str, float, List[str]]:
-    plan = (features.get("plan") or "").lower()
-    plan_risk = {"basic": 0.15, "standard": 0.10, "premium": 0.05}.get(plan, 0.12)
-    retrasos = float(features.get("retrasos_pago", 0))
-    tiempo = float(features.get("tiempo_contrato_meses", 0))
-    uso = float(features.get("uso_mensual", 0))
+    tenure = float(features.get("tenure", 0) or 0)
+    monthly = float(features.get("MonthlyCharges", 0.0) or 0.0)
+    total = float(features.get("TotalCharges", 0.0) or 0.0)
+    senior = int(features.get("SeniorCitizen", 0) or 0)
+    contract = str(features.get("Contract", "") or "")
+    online_security = str(features.get("OnlineSecurity", "") or "")
 
-    c_retrasos = 0.08 * retrasos
-    c_tiempo = -0.03 * tiempo
-    c_uso = -0.02 * uso
-    c_plan = plan_risk
+    c_tenure = -0.03 * tenure
+    c_monthly = -0.01 * monthly
+    c_total = -0.005 * total
+    c_senior = 0.1 if senior == 1 else 0.0
+    c_contract = 0.15 if contract == "Month-to-month" else (-0.05 if contract == "Two year" else 0.0)
+    c_security = 0.08 if online_security == "No" else 0.0
 
-    z = -1.0 + c_retrasos + c_tiempo + c_uso + c_plan
+    z = -1.0 + c_tenure + c_monthly + c_total + c_senior + c_contract + c_security
     p = 1.0 / (1.0 + math.exp(-z))
     label = "Va a cancelar" if p >= 0.5 else "Va a continuar"
 
     contrib = {
-        "retrasos_pago": abs(c_retrasos),
-        "tiempo_contrato_meses": abs(c_tiempo),
-        "uso_mensual": abs(c_uso),
-        "plan": abs(c_plan),
+        "tenure": abs(c_tenure),
+        "Contract": abs(c_contract),
+        "OnlineSecurity": abs(c_security),
     }
     top = sorted(contrib, key=lambda k: contrib[k], reverse=True)[:3]
     return label, p, top
@@ -44,23 +46,18 @@ MODEL = None
 FEATURE_NAMES: Optional[List[str]] = None
 
 
-def _plan_to_numeric(plan: str) -> float:
-    p = (plan or "").lower()
-    return {"basic": 0.0, "standard": 0.5, "premium": 1.0}.get(p, 0.25)
+# plan no longer used
 
 
 def _to_vector(features: dict, names: List[str]) -> List[float]:
-    # Map incoming JSON features to vector using provided feature names
-    mapping = {
-        "tiempo_contrato_meses": lambda v: float(v or 0),
-        "retrasos_pago": lambda v: float(v or 0),
-        "uso_mensual": lambda v: float(v or 0.0),
-        "plan": lambda v: _plan_to_numeric(v or ""),
-    }
+    # Map incoming canonical JSON features to vector if pipeline expects numeric order
     vec = []
     for n in names:
-        fn = mapping.get(n)
-        vec.append(fn(features.get(n)) if fn else float(features.get(n, 0)))
+        v = features.get(n)
+        try:
+            vec.append(float(v if v is not None and v != "" else 0))
+        except Exception:
+            vec.append(0.0)
     return vec
 
 
@@ -126,12 +123,32 @@ def predict_with_model(features: dict) -> Optional[Tuple[str, float, List[str]]]
 def predict():
     payload = request.get_json(silent=True) or {}
     feats = payload.get("features") or payload
+    # Enforce input rules: case-sensitive strings, TotalCharges null->0.0
+    if "TotalCharges" in feats and (feats["TotalCharges"] is None or feats["TotalCharges"] == ""):
+        feats["TotalCharges"] = 0.0
+
     # Try model first, fallback to heuristic
     out = predict_with_model(feats)
     if out is None:
         out = heuristic_score(feats)
     label, prob, top = out
+
+    # Enriched response
+    risk = "Alto Riesgo" if prob >= 0.66 else ("Riesgo Medio" if prob >= 0.33 else "Bajo Riesgo")
+    will = 1 if prob >= 0.5 else 0
+    conf = max(0.5, abs(prob - 0.5) * 2)
+    action = "Retención Prioritaria / Oferta de Lealtad" if will == 1 else "Upsell / Programa de Fidelización"
+
     return jsonify({
+        "metadata": {"model_version": "v1.0", "timestamp": os.getenv("MODEL_TIMESTAMP", "")},
+        "prediction": {
+            "churn_probability": prob,
+            "will_churn": will,
+            "risk_level": risk,
+            "confidence_score": conf
+        },
+        "business_logic": {"suggested_action": action},
+        # Legacy keys for backward compatibility
         "prevision": label,
         "probabilidad": prob,
         "top_features": top

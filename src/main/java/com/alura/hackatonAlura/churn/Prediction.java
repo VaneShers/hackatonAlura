@@ -28,7 +28,7 @@ public class Prediction {
     @Column(nullable = false)
     private Double usoMensual;
 
-    @Column(nullable = false)
+    // 'plan' ya no es obligatorio; se permite nulo para compatibilidad histórica
     private String plan;
 
     @Column(nullable = false)

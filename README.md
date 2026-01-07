@@ -6,22 +6,39 @@ API REST que recibe datos de cliente y devuelve predicción de churn y probabili
 ## Endpoints
 - POST `/api/churn/predict` (JSON)
   - Protegido: requiere `Authorization: Bearer <token>`
-  - Entrada:
+  - Entrada (20 variables canónicas, sin `customerID` ni `Churn`):
     ```json
     {
-      "tiempo_contrato_meses": 12,
-      "retrasos_pago": 2,
-      "uso_mensual": 14.5,
-      "plan": "Premium"
+      "gender": "Female",
+      "SeniorCitizen": 0,
+      "Partner": "Yes",
+      "Dependents": "No",
+      "tenure": 24,
+      "PhoneService": "Yes",
+      "MultipleLines": "No",
+      "InternetService": "DSL",
+      "OnlineSecurity": "Yes",
+      "OnlineBackup": "No",
+      "DeviceProtection": "No",
+      "TechSupport": "No",
+      "StreamingTV": "No",
+      "StreamingMovies": "No",
+      "Contract": "One year",
+      "PaperlessBilling": "Yes",
+      "PaymentMethod": "Electronic check",
+      "MonthlyCharges": 29.85,
+      "TotalCharges": 1889.50
     }
     ```
-  - Salida:
+  - Salida enriquecida:
     ```json
     {
+      "metadata": { "model_version": "v1.0", "timestamp": "2025-10-04T10:00:00Z" },
+      "prediction": { "churn_probability": 0.742, "will_churn": 1, "risk_level": "Alto Riesgo", "confidence_score": 0.85 },
+      "business_logic": { "suggested_action": "Retención Prioritaria / Oferta de Lealtad" },
       "prevision": "Va a cancelar",
-      "probabilidad": 0.76,
-      "topFeatures": ["retrasos_pago", "tiempo_contrato_meses", "uso_mensual"],
-      "timestamp": "2025-12-25T00:00:00Z"
+      "probabilidad": 0.742,
+      "top_features": ["Contract", "tenure", "OnlineSecurity"]
     }
     ```
 - GET `/api/churn/stats`
@@ -34,27 +51,33 @@ API REST que recibe datos de cliente y devuelve predicción de churn y probabili
 
 - POST `/api/churn/predict/batch/csv` (multipart/form-data)
   - Protegido: requiere `Authorization: Bearer <token>`
-  - Subir archivo CSV con encabezados: `tiempo_contrato_meses,retrasos_pago,uso_mensual,plan`
-  - Salida igual al batch JSON.
+  - Subir archivo CSV con encabezados canónicos (20 columnas): `gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges`
+  - Nota: `TotalCharges` vacío se normaliza a `0.0` (Opción A); alternativamente puede rechazarse la solicitud (Opción B).
   - Ejemplo listo para usar: `samples/churn_batch_sample.csv`
 
+- POST `/api/churn/evaluate/batch/csv` (multipart/form-data)
+  - Protegido: requiere `Authorization: Bearer <token)`
+  - Subir archivo CSV extendido que incluya las 20 columnas canónicas y adicionalmente `Churn` con valores `Yes`/`No`.
+  - Salida: métricas y conteos `{ total, tp, tn, fp, fn, accuracy, precision, recall, f1 }`.
+
 ## Validación de entrada
-- Campos requeridos para `/api/churn/predict`:
-  - `tiempo_contrato_meses`: entero ≥ 0
-  - `retrasos_pago`: entero ≥ 0
-  - `uso_mensual`: número ≥ 0
-  - `plan`: string entre {"Basic","Standard","Premium"} (no sensible a mayúsculas/minúsculas)
-- Respuestas esperadas en caso de error:
-  - HTTP 400 con detalle por campo, por ejemplo:
-    ```json
-    {
-      "errors": {
-        "tiempo_contrato_meses": "Debe ser un entero no negativo",
-        "plan": "Valor inválido: use Basic/Standard/Premium"
-      }
-    }
-    ```
-Nota: la validación ya está implementada en la API (ver pruebas en `target/surefire-reports`).
+- Campos requeridos para `/api/churn/predict` (20 variables):
+  - Strings (sensibles a mayúsculas/minúsculas) deben coincidir exactamente con la referencia: 
+    - `gender`: `Male|Female`
+    - `Partner`, `Dependents`, `PhoneService`, `PaperlessBilling`: `Yes|No`
+    - `MultipleLines`: `No|Yes|No phone service`
+    - `InternetService`: `DSL|Fiber optic|No`
+    - `OnlineSecurity`, `OnlineBackup`, `DeviceProtection`, `TechSupport`, `StreamingTV`, `StreamingMovies`: `Yes|No|No internet service`
+    - `Contract`: `Month-to-month|One year|Two year`
+    - `PaymentMethod`: `Electronic check|Mailed check|Bank transfer (automatic)|Credit card (automatic)`
+  - Números:
+    - `SeniorCitizen`: entero `0|1`
+    - `tenure`: entero ≥ 0
+    - `MonthlyCharges`, `TotalCharges`: números ≥ 0 sin símbolos de moneda.
+  - Nulos:
+    - `TotalCharges` vacío/nulo → se normaliza a `0.0` (Opción A) o se rechaza (Opción B).
+  
+- Errores 400 incluirán detalle por campo con claves coincidentes a los nombres canónicos.
 
 ## Ejemplos de petición y respuesta
 - Postman: importar y usar [postman/ChurnInsight.postman_collection.json](postman/ChurnInsight.postman_collection.json).
@@ -64,10 +87,25 @@ Nota: la validación ya está implementada en la API (ver pruebas en `target/sur
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer <token>" \
     -d '{
-      "tiempo_contrato_meses": 12,
-      "retrasos_pago": 2,
-      "uso_mensual": 14.5,
-      "plan": "Premium"
+      "gender": "Female",
+      "SeniorCitizen": 0,
+      "Partner": "Yes",
+      "Dependents": "No",
+      "tenure": 24,
+      "PhoneService": "Yes",
+      "MultipleLines": "No",
+      "InternetService": "DSL",
+      "OnlineSecurity": "Yes",
+      "OnlineBackup": "No",
+      "DeviceProtection": "No",
+      "TechSupport": "No",
+      "StreamingTV": "No",
+      "StreamingMovies": "No",
+      "Contract": "One year",
+      "PaperlessBilling": "Yes",
+      "PaymentMethod": "Electronic check",
+      "MonthlyCharges": 29.85,
+      "TotalCharges": 1889.50
     }'
   ```
 - cURL (batch CSV):
@@ -76,6 +114,14 @@ Nota: la validación ya está implementada en la API (ver pruebas en `target/sur
     -H "Content-Type: multipart/form-data" \
     -H "Authorization: Bearer <token>" \
     -F "file=@samples/churn_batch_sample.csv"
+  ```
+
+- cURL (evaluate CSV):
+  ```bash
+  curl -X POST "http://localhost:8080/api/churn/evaluate/batch/csv" \
+    -H "Content-Type: multipart/form-data" \
+    -H "Authorization: Bearer <token>" \
+    -F "file=@<ruta-al-csv-extendido-con-Churn>.csv"
   ```
 
 ## Configuración
@@ -118,21 +164,21 @@ Invoke-RestMethod -Method GET -Uri http://localhost:8080/api/churn/stats -Header
 ```
 
 ## Integración con DS
-- Contrato esperado del servicio DS (POST a `churn.ds.url`):
+- Contrato del servicio DS (POST a `churn.ds.url`):
   - Entrada:
     ```json
-    {
-      "features": {
-        "tiempo_contrato_meses": 12,
-        "retrasos_pago": 2,
-        "uso_mensual": 14.5,
-        "plan": "Premium"
-      }
-    }
+    { "features": { /* 20 variables canónicas */ } }
     ```
-  - Salida (heurístico o modelo entrenado):
+  - Salida enriquecida y compatibilidad histórica:
     ```json
-    { "prevision": "Va a cancelar", "probabilidad": 0.81, "top_features": ["retrasos_pago","plan","tiempo_contrato_meses"] }
+    {
+      "metadata": {"model_version": "v1.0", "timestamp": "..."},
+      "prediction": {"churn_probability": 0.742, "will_churn": 1, "risk_level": "Alto Riesgo", "confidence_score": 0.85},
+      "business_logic": {"suggested_action": "Retención Prioritaria / Oferta de Lealtad"},
+      "prevision": "Va a cancelar",
+      "probabilidad": 0.742,
+      "top_features": ["Contract", "tenure", "OnlineSecurity"]
+    }
     ```
 
 ## Notebook (Data Science)
@@ -165,13 +211,13 @@ docker compose up --build
 - Build: Maven Wrapper (`mvnw`/`mvnw.cmd`)
 
 ## Explicación del modelo (DS actual)
-El microservicio DS implementa un puntaje heurístico que aproxima una función logística sobre cuatro señales:
-- `retrasos_pago` (aumenta el riesgo)
-- `tiempo_contrato_meses` (disminuye el riesgo con antigüedad)
-- `uso_mensual` (mayor uso disminuye el riesgo)
-- `plan` (riesgo base según tipo de plan)
+El microservicio DS acepta las 20 variables canónicas y, en ausencia de un pipeline entrenado (`joblib`), aplica una heurística mínima basada en:
+- `tenure` (reduce riesgo con antigüedad)
+- `Contract` (Month-to-month aumenta riesgo; Two year reduce)
+- `OnlineSecurity` (No aumenta riesgo)
+- `MonthlyCharges` y `TotalCharges` (pequeño efecto)
 
-Se calcula un puntaje lineal y se transforma en probabilidad con la función sigmoide. Además, se retornan `top_features` como las tres variables con mayor contribución absoluta al resultado. Cuando esté disponible un modelo entrenado (joblib/pickle), el microservicio puede cargarlo para reemplazar la heurística sin cambiar el contrato de integración.
+La probabilidad se calcula con una función sigmoide y se devuelven `top_features` aproximadas. Cuando se disponga del modelo entrenado, DS podrá cargar `churn_pipeline.pkl` y `feature_names.pkl` para reemplazar la heurística sin cambiar el contrato.
 
 ## Nombre y alcance
 - Nombre del proyecto: Churn Alert.
@@ -232,7 +278,13 @@ pip install -r dashboard/requirements.txt
 streamlit run dashboard/app.py
 ```
 
+### Autenticación en el dashboard
+- Los endpoints protegidos (predicción y batch CSV) requieren JWT. Usa el panel lateral del dashboard ("Login rápido") para obtener el token con `admin@local` / `Admin123!`, o pega manualmente el token en el campo "Bearer token".
+- Si intentas subir un CSV sin token, el dashboard mostrará una guía para iniciar sesión antes de continuar.
+- Alternativa: ejecuta `./run.ps1 -Build` para levantar todo con Docker y abrir el dashboard; el script obtiene un JWT automáticamente y puedes copiarlo si lo necesitas.
+
 ### Uso
 - Por defecto apunta a `http://localhost:8080`. Puedes ajustar la URL y (si aplica) ingresar un Bearer token en la barra lateral.
 - Para prueba de lote, usa el CSV de ejemplo en [samples/churn_batch_sample.csv](samples/churn_batch_sample.csv).
+- También se aceptan archivos extendidos que incluyan columnas adicionales como `customerID` y `Churn`; el backend ignora columnas no utilizadas. Asegúrate de incluir las 20 columnas canónicas con nombres exactos.
 - Código del panel: [dashboard/app.py](dashboard/app.py) | Dependencias: [dashboard/requirements.txt](dashboard/requirements.txt)

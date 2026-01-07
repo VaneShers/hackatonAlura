@@ -90,12 +90,12 @@
       "_id": "req_predict",
       "_type": "request",
       "parentId": "fld_churn",
-      "name": "Predict (single)",
+      "name": "Predict (single - canonical)",
       "method": "POST",
       "url": "{{ baseUrl }}/api/churn/predict",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"tiempo_contrato_meses\": 12,\n  \"retrasos_pago\": 2,\n  \"uso_mensual\": 14.5,\n  \"plan\": \"Premium\"\n}"
+        "text": "{\n  \"gender\": \"Female\",\n  \"SeniorCitizen\": 0,\n  \"Partner\": \"Yes\",\n  \"Dependents\": \"No\",\n  \"tenure\": 24,\n  \"PhoneService\": \"Yes\",\n  \"MultipleLines\": \"No\",\n  \"InternetService\": \"DSL\",\n  \"OnlineSecurity\": \"Yes\",\n  \"OnlineBackup\": \"No\",\n  \"DeviceProtection\": \"No\",\n  \"TechSupport\": \"No\",\n  \"StreamingTV\": \"No\",\n  \"StreamingMovies\": \"No\",\n  \"Contract\": \"One year\",\n  \"PaperlessBilling\": \"Yes\",\n  \"PaymentMethod\": \"Electronic check\",\n  \"MonthlyCharges\": 29.85,\n  \"TotalCharges\": 1889.50\n}"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" },
@@ -107,12 +107,12 @@
       "_id": "req_batch_json",
       "_type": "request",
       "parentId": "fld_batch",
-      "name": "Predict (batch JSON)",
+      "name": "Predict (batch JSON - canonical)",
       "method": "POST",
       "url": "{{ baseUrl }}/api/churn/predict/batch",
       "body": {
         "mimeType": "application/json",
-        "text": "[\n  { \n    \"tiempo_contrato_meses\": 12, \n    \"retrasos_pago\": 1, \n    \"uso_mensual\": 10.0, \n    \"plan\": \"Basic\" \n  },\n  { \n    \"tiempo_contrato_meses\": 6, \n    \"retrasos_pago\": 3, \n    \"uso_mensual\": 8.0, \n    \"plan\": \"Premium\" \n  }\n]"
+        "text": "[\n  {\n    \"gender\": \"Female\",\n    \"SeniorCitizen\": 0,\n    \"Partner\": \"Yes\",\n    \"Dependents\": \"No\",\n    \"tenure\": 24,\n    \"PhoneService\": \"Yes\",\n    \"MultipleLines\": \"No\",\n    \"InternetService\": \"DSL\",\n    \"OnlineSecurity\": \"Yes\",\n    \"OnlineBackup\": \"No\",\n    \"DeviceProtection\": \"No\",\n    \"TechSupport\": \"No\",\n    \"StreamingTV\": \"No\",\n    \"StreamingMovies\": \"No\",\n    \"Contract\": \"One year\",\n    \"PaperlessBilling\": \"Yes\",\n    \"PaymentMethod\": \"Electronic check\",\n    \"MonthlyCharges\": 29.85,\n    \"TotalCharges\": 1889.50\n  },\n  {\n    \"gender\": \"Male\",\n    \"SeniorCitizen\": 1,\n    \"Partner\": \"No\",\n    \"Dependents\": \"No\",\n    \"tenure\": 2,\n    \"PhoneService\": \"Yes\",\n    \"MultipleLines\": \"Yes\",\n    \"InternetService\": \"Fiber optic\",\n    \"OnlineSecurity\": \"No\",\n    \"OnlineBackup\": \"No\",\n    \"DeviceProtection\": \"No\",\n    \"TechSupport\": \"No\",\n    \"StreamingTV\": \"Yes\",\n    \"StreamingMovies\": \"Yes\",\n    \"Contract\": \"Month-to-month\",\n    \"PaperlessBilling\": \"Yes\",\n    \"PaymentMethod\": \"Electronic check\",\n    \"MonthlyCharges\": 75.50,\n    \"TotalCharges\": 0.0\n  }\n]"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" },

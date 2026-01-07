@@ -30,16 +30,16 @@ class ChurnBatchCsvTest {
     private com.alura.hackatonAlura.security.JwtUtil jwtUtil;
 
     @Test
-    void uploadValidCsvReturnsAggregates() throws Exception {
-        String csv = "tiempo_contrato_meses,retrasos_pago,uso_mensual,plan\n" +
-                "12,2,14.5,Premium\n" +
-                "6,0,8.0,Basic\n";
+        void uploadValidCsvReturnsAggregates() throws Exception {
+                String csv = "gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges\n" +
+                                "Female,0,Yes,No,24,Yes,No,DSL,Yes,No,No,No,No,No,One year,Yes,Electronic check,29.85,1889.50\n" +
+                                "Male,1,No,No,2,Yes,Yes,Fiber optic,No,No,No,No,Yes,Yes,Month-to-month,Yes,Electronic check,75.50,\n";
         MockMultipartFile file = new MockMultipartFile(
                 "file", "sample.csv", "text/csv", csv.getBytes()
         );
 
         given(churnService.predict(any(ChurnRequest.class)))
-                .willReturn(new ChurnPredictionResponse("Va a cancelar", 0.76, java.util.List.of("retrasos_pago","plan","tiempo_contrato_meses"), java.time.Instant.now()));
+                .willReturn(new ChurnPredictionResponse("Va a cancelar", 0.76, java.util.List.of("Contract","tenure","OnlineSecurity"), java.time.Instant.now()));
 
         mockMvc.perform(multipart("/api/churn/predict/batch/csv")
                         .file(file)
@@ -51,9 +51,9 @@ class ChurnBatchCsvTest {
     }
 
     @Test
-    void uploadInvalidCsvReturns400() throws Exception {
-        String badCsv = "tiempo_contrato_meses,retrasos_pago,uso_mensual,plan\n" +
-                "x,2,14.5,Premium\n"; // invalid integer
+        void uploadInvalidCsvReturns400() throws Exception {
+                String badCsv = "gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges\n" +
+                                "Female,x,Yes,No,24,Yes,No,DSL,Yes,No,No,No,No,No,One year,Yes,Electronic check,29.85,1889.50\n"; // invalid integer in SeniorCitizen
         MockMultipartFile file = new MockMultipartFile(
                 "file", "bad.csv", "text/csv", badCsv.getBytes()
         );

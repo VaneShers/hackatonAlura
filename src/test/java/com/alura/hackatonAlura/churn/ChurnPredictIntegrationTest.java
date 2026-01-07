@@ -22,11 +22,26 @@ class ChurnPredictIntegrationTest {
     @Test
     void postPredictWithValidPayloadReturnsPrediction() throws Exception {
         String payload = "{\n" +
-                "  \"tiempo_contrato_meses\": 12,\n" +
-                "  \"retrasos_pago\": 2,\n" +
-                "  \"uso_mensual\": 14.5,\n" +
-                "  \"plan\": \"Premium\"\n" +
-                "}";
+            "  \"gender\": \"Female\",\n" +
+            "  \"SeniorCitizen\": 0,\n" +
+            "  \"Partner\": \"Yes\",\n" +
+            "  \"Dependents\": \"No\",\n" +
+            "  \"tenure\": 24,\n" +
+            "  \"PhoneService\": \"Yes\",\n" +
+            "  \"MultipleLines\": \"No\",\n" +
+            "  \"InternetService\": \"DSL\",\n" +
+            "  \"OnlineSecurity\": \"Yes\",\n" +
+            "  \"OnlineBackup\": \"No\",\n" +
+            "  \"DeviceProtection\": \"No\",\n" +
+            "  \"TechSupport\": \"No\",\n" +
+            "  \"StreamingTV\": \"No\",\n" +
+            "  \"StreamingMovies\": \"No\",\n" +
+            "  \"Contract\": \"One year\",\n" +
+            "  \"PaperlessBilling\": \"Yes\",\n" +
+            "  \"PaymentMethod\": \"Electronic check\",\n" +
+            "  \"MonthlyCharges\": 29.85,\n" +
+            "  \"TotalCharges\": 1889.50\n" +
+            "}";
 
         mockMvc.perform(post("/api/churn/predict")
                         .contentType(MediaType.APPLICATION_JSON)

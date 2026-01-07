@@ -14,10 +14,12 @@ public class ChurnServiceTest {
         PredictionRepository repo = Mockito.mock(PredictionRepository.class);
         ChurnService service = new ChurnService(rt, "", repo);
         ChurnRequest req = new ChurnRequest();
-        req.setTiempoContratoMeses(12);
-        req.setRetrasosPago(2);
-        req.setUsoMensual(14.5);
-        req.setPlan("Premium");
+        req.setTenure(12);
+        req.setMonthlyCharges(14.5);
+        req.setTotalCharges(0.0);
+        req.setSeniorCitizen(0);
+        req.setContract("Month-to-month");
+        req.setOnlineSecurity("No");
 
         ChurnPredictionResponse res = service.predict(req);
         assertNotNull(res);

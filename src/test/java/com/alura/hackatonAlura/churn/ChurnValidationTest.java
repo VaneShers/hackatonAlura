@@ -34,33 +34,36 @@ class ChurnValidationTest {
 
     @Test
     void whenInvalidFields_thenReturns400WithErrorsMap() throws Exception {
-        Map<String, Object> payload = Map.of(
-                "tiempo_contrato_meses", -1,
-                "retrasos_pago", -2,
-                "uso_mensual", -3.5,
-                "plan", "Gold"
+        Map<String, Object> payload = java.util.Map.ofEntries(
+            java.util.Map.entry("gender", "male"), // invalid (case-sensitive)
+            java.util.Map.entry("SeniorCitizen", -1), // invalid (<0)
+            java.util.Map.entry("Partner", "Yes"),
+            java.util.Map.entry("Dependents", "No"),
+            java.util.Map.entry("tenure", -5), // invalid (<0)
+            java.util.Map.entry("PhoneService", "Yes"),
+            java.util.Map.entry("MultipleLines", "No"),
+            java.util.Map.entry("InternetService", "DSL"),
+            java.util.Map.entry("OnlineSecurity", "Yes"),
+            java.util.Map.entry("OnlineBackup", "No"),
+            java.util.Map.entry("DeviceProtection", "No"),
+            java.util.Map.entry("TechSupport", "No"),
+            java.util.Map.entry("StreamingTV", "No"),
+            java.util.Map.entry("StreamingMovies", "No"),
+            java.util.Map.entry("Contract", "One year"),
+            java.util.Map.entry("PaperlessBilling", "Yes"),
+            java.util.Map.entry("PaymentMethod", "Electronic check"),
+            java.util.Map.entry("MonthlyCharges", -3.5), // invalid (<0)
+            java.util.Map.entry("TotalCharges", 0.0)
         );
         mockMvc.perform(post("/api/churn/predict")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors.tiempoContratoMeses").exists())
-                .andExpect(jsonPath("$.errors.retrasosPago").exists())
-                .andExpect(jsonPath("$.errors.usoMensual").exists())
-                .andExpect(jsonPath("$.errors.plan").value("Valor inválido: use Basic/Standard/Premium"));
+                .andExpect(jsonPath("$.errors.gender").exists())
+                .andExpect(jsonPath("$.errors.seniorCitizen").exists())
+                .andExpect(jsonPath("$.errors.tenure").exists())
+                .andExpect(jsonPath("$.errors.monthlyCharges").exists());
     }
 
-        @Test
-        void whenMissingPlan_thenReturns400WithPlanMessage() throws Exception {
-        Map<String, Object> payload = Map.of(
-            "tiempo_contrato_meses", 12,
-            "retrasos_pago", 2,
-            "uso_mensual", 14.5
-        );
-        mockMvc.perform(post("/api/churn/predict")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(payload)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errors.plan").value("Debe ser un texto no vacío"));
-        }
+    // 'plan' ya no es requerido; se elimina la prueba de validación asociada.
 }
