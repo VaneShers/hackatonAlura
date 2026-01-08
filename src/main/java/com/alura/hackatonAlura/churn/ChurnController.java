@@ -22,7 +22,7 @@ public class ChurnController {
     private final ChurnService churnService;
     private static final Logger log = LoggerFactory.getLogger(ChurnController.class);
 
-    public ChurnController(ChurnService churnService) {
+    public ChurnController(ChurnService churnService ) {
         this.churnService = churnService;
     }
 
@@ -62,7 +62,7 @@ public class ChurnController {
             return predictBatch(reqs);
         }
     }
-    
+
     @PostMapping(path = "/evaluate/batch/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Map<String, Object> evaluateBatchCsv(@RequestPart("file") MultipartFile file) throws Exception {
         try (var reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
