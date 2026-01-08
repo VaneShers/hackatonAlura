@@ -1,0 +1,154 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-12-26T00:00:00.000Z",
+  "__export_source": "github-copilot:churn-alert",
+  "resources": [
+    {
+      "_id": "wrk_churn_alert",
+      "_type": "workspace",
+      "name": "Churn Alert",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_churn_alert",
+      "name": "Base Environment",
+      "data": {
+        "baseUrl": "http://localhost:8080",
+        "jwt": ""
+      }
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_churn_alert",
+      "name": "Auth",
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+    {
+      "_id": "fld_churn",
+      "_type": "request_group",
+      "parentId": "wrk_churn_alert",
+      "name": "Churn",
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+    {
+      "_id": "fld_batch",
+      "_type": "request_group",
+      "parentId": "wrk_churn_alert",
+      "name": "Batch",
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+    {
+      "_id": "fld_analytics",
+      "_type": "request_group",
+      "parentId": "wrk_churn_alert",
+      "name": "Analytics",
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+
+    {
+      "_id": "req_register",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Register",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/auth/register",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"StrongPass123!\",\n  \"fullName\": \"User Name\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+    {
+      "_id": "req_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"admin@local\",\n  \"password\": \"Admin123!\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ]
+    },
+
+    {
+      "_id": "req_predict",
+      "_type": "request",
+      "parentId": "fld_churn",
+      "name": "Predict (single - canonical)",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/churn/predict",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"gender\": \"Female\",\n  \"SeniorCitizen\": 0,\n  \"Partner\": \"Yes\",\n  \"Dependents\": \"No\",\n  \"tenure\": 24,\n  \"PhoneService\": \"Yes\",\n  \"MultipleLines\": \"No\",\n  \"InternetService\": \"DSL\",\n  \"OnlineSecurity\": \"Yes\",\n  \"OnlineBackup\": \"No\",\n  \"DeviceProtection\": \"No\",\n  \"TechSupport\": \"No\",\n  \"StreamingTV\": \"No\",\n  \"StreamingMovies\": \"No\",\n  \"Contract\": \"One year\",\n  \"PaperlessBilling\": \"Yes\",\n  \"PaymentMethod\": \"Electronic check\",\n  \"MonthlyCharges\": 29.85,\n  \"TotalCharges\": 1889.50\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ jwt }}" }
+      ],
+      "parameters": []
+    },
+    {
+      "_id": "req_batch_json",
+      "_type": "request",
+      "parentId": "fld_batch",
+      "name": "Predict (batch JSON - canonical)",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/churn/predict/batch",
+      "body": {
+        "mimeType": "application/json",
+        "text": "[\n  {\n    \"gender\": \"Female\",\n    \"SeniorCitizen\": 0,\n    \"Partner\": \"Yes\",\n    \"Dependents\": \"No\",\n    \"tenure\": 24,\n    \"PhoneService\": \"Yes\",\n    \"MultipleLines\": \"No\",\n    \"InternetService\": \"DSL\",\n    \"OnlineSecurity\": \"Yes\",\n    \"OnlineBackup\": \"No\",\n    \"DeviceProtection\": \"No\",\n    \"TechSupport\": \"No\",\n    \"StreamingTV\": \"No\",\n    \"StreamingMovies\": \"No\",\n    \"Contract\": \"One year\",\n    \"PaperlessBilling\": \"Yes\",\n    \"PaymentMethod\": \"Electronic check\",\n    \"MonthlyCharges\": 29.85,\n    \"TotalCharges\": 1889.50\n  },\n  {\n    \"gender\": \"Male\",\n    \"SeniorCitizen\": 1,\n    \"Partner\": \"No\",\n    \"Dependents\": \"No\",\n    \"tenure\": 2,\n    \"PhoneService\": \"Yes\",\n    \"MultipleLines\": \"Yes\",\n    \"InternetService\": \"Fiber optic\",\n    \"OnlineSecurity\": \"No\",\n    \"OnlineBackup\": \"No\",\n    \"DeviceProtection\": \"No\",\n    \"TechSupport\": \"No\",\n    \"StreamingTV\": \"Yes\",\n    \"StreamingMovies\": \"Yes\",\n    \"Contract\": \"Month-to-month\",\n    \"PaperlessBilling\": \"Yes\",\n    \"PaymentMethod\": \"Electronic check\",\n    \"MonthlyCharges\": 75.50,\n    \"TotalCharges\": 0.0\n  }\n]"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ jwt }}" }
+      ],
+      "parameters": []
+    },
+    {
+      "_id": "req_batch_csv",
+      "_type": "request",
+      "parentId": "fld_batch",
+      "name": "Predict (batch CSV)",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/churn/predict/batch/csv",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          { "name": "file", "type": "file", "fileName": "C:/path/to/your/file.csv" }
+        ]
+      },
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ jwt }}" }
+      ],
+      "parameters": []
+    },
+    {
+      "_id": "req_stats",
+      "_type": "request",
+      "parentId": "fld_analytics",
+      "name": "Stats",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/churn/stats",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ jwt }}" }
+      ],
+      "parameters": []
+    }
+  ]
+}
