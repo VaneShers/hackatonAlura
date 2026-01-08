@@ -1,5 +1,6 @@
 package com.alura.hackatonAlura.config;
 
+import com.alura.hackatonAlura.user.Role;
 import com.alura.hackatonAlura.user.User;
 import com.alura.hackatonAlura.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,12 +21,12 @@ public class DataInitializer {
                                 @Value("${admin.initial.full-name:Initial Admin}") String adminFullName) {
         return args -> {
             String emailLower = adminEmail.toLowerCase(Locale.ROOT).trim();
-            boolean hasAdmin = userRepository.findAll().stream().anyMatch(u -> "ADMIN".equalsIgnoreCase(u.getRoles()));
+            boolean hasAdmin = userRepository.findAll().stream().anyMatch(u -> u.getRoles() == Role.ADMIN);
             if (!hasAdmin) {
                 if (userRepository.existsByEmail(emailLower)) {
                     // Upgrade existing user to ADMIN if email matches
                     userRepository.findByEmail(emailLower).ifPresent(u -> {
-                        u.setRoles("ADMIN");
+                        u.setRoles(Role.ADMIN);
                         userRepository.save(u);
                     });
                 } else {
@@ -33,7 +34,7 @@ public class DataInitializer {
                     admin.setEmail(emailLower);
                     admin.setPasswordHash(encoder.encode(adminPassword));
                     admin.setFullName(adminFullName);
-                    admin.setRoles("ADMIN");
+                    admin.setRoles(Role.ADMIN);
                     userRepository.save(admin);
                 }
             }

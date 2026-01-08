@@ -18,9 +18,9 @@ import java.util.List;
 @Tag(name = "User", description = "Operaciones del usuario autenticado")
 public class UserProfileController {
 
-    private final User.UserService userService;
+    private final UserService userService;
 
-    public UserProfileController(User.UserService userService) {
+    public UserProfileController(UserService userService) {
         this.userService = userService;
     }
 
@@ -31,12 +31,21 @@ public class UserProfileController {
         return ResponseEntity.ok(res);
     }
 
-    /// Añadir función de actualizar la Password
     @PutMapping
     @Operation(summary = "Actualizar perfil", description = "Actualiza email y/o nombre completo del usuario autenticado")
     public ResponseEntity<UserResponse> update(@Valid @RequestBody UpdateUserRequest req, Authentication auth) {
         UserResponse res = userService.updateProfile(auth.getName(), req);
         return ResponseEntity.ok(res);
+    }
+
+    @PutMapping("/password")
+    @Operation(
+            summary = "Actualizar contraseña",
+            description = "Actualiza la contraseña del usuario autenticado"
+    )
+    public ResponseEntity<Void> updatePassword(@Valid @RequestBody UpdatePasswordRequest req, Authentication auth) {
+        userService.updatePassword(auth.getName(), req);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping
@@ -46,16 +55,12 @@ public class UserProfileController {
         return ResponseEntity.noContent().build();
     }
 
-    /// ROL DE ADMIN
-
-    /// No cumple con la separación de funcionalidades
-    //@GetMapping("/{id}")
-    //@Operation(summary = "Obtener usuario por id", description = "Devuelve un usuario por su identificador")
-    //public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
-       // return userRepository.findById(id)
-               // .map(u -> ResponseEntity.ok(new UserResponse(u.getId(), u.getEmail(), u.getFullName(), u.getRoles())))
-               // .orElseGet(() -> ResponseEntity.notFound().build());
-    //}
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Obtener usuario por id", description = "Devuelve un usuario por su identificador")
+    public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
 
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
@@ -69,14 +74,13 @@ public class UserProfileController {
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar rol", description = "Actualiza el rol del usuario (ADMIN/USER).")
-    public ResponseEntity<Void> updateRole() {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<UserResponse> updateRole(@PathVariable Long id,@Valid @RequestBody UpdateRoleRequest req) {
+        User u = userService.updateRole(id, req.role());
+        return ResponseEntity.ok(
+                new UserResponse(u.getId(), u.getEmail(), u.getFullName(), u.getRoles())
+        );
     }
 
-    //public UserResponse updateRole(@PathVariable Long id, @Valid @RequestBody AdminUserController.UpdateRoleRequest req) {
-     //   User u = userService.updateRole(id, req.role);
-       // return new UserResponse(u.getId(), u.getEmail(), u.getFullName(), u.getRoles());
-   // }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

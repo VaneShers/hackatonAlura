@@ -1,5 +1,6 @@
 package com.alura.hackatonAlura.auth;
 
+import com.alura.hackatonAlura.user.Role;
 import com.alura.hackatonAlura.user.User;
 import com.alura.hackatonAlura.user.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -27,10 +28,10 @@ class AuthServiceTest {
 
     @Test
     void registerThrowsOnDuplicateEmail() {
-        RegisterRequest req = new RegisterRequest("Test@Example.com", "secret", "Name");
+        RegisterRequest req = new RegisterRequest("Test@Example.com", "secret", "Name", null);
         when(userRepository.existsByEmail("test@example.com")).thenReturn(true);
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> authService.register(req));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> authService.register(req, null));
         assertEquals("Email already in use", ex.getMessage());
         verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any());
@@ -38,7 +39,7 @@ class AuthServiceTest {
 
     @Test
     void registerHashesPasswordAndSavesUser() {
-        RegisterRequest req = new RegisterRequest("User@Mail.com", "password123", "Full Name");
+        RegisterRequest req = new RegisterRequest("User@Mail.com", "password123", "Full Name", null);
         when(userRepository.existsByEmail("user@mail.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("HASHED-PW");
 
@@ -47,11 +48,11 @@ class AuthServiceTest {
         saved.setEmail("user@mail.com");
         saved.setPasswordHash("HASHED-PW");
         saved.setFullName("Full Name");
-        saved.setRoles("USER");
+        saved.setRoles(Role.USER);
 
         when(userRepository.save(any(User.class))).thenReturn(saved);
 
-        UserResponse res = authService.register(req);
+        UserResponse res = authService.register(req,null);
 
         assertNotNull(res);
         assertEquals(1L, res.id());
